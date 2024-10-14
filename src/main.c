@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <stdbool.h>
+
 const GLuint WIDTH = 800, HEIGHT = 600;
 
 void key_callback(GLFWwindow *window, int key, int scancode, int action,
@@ -15,6 +17,40 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action,
 
 void error_callback(int error, const char *msg) {
   printf("%d %s\n", error, msg);
+}
+
+bool check_status(GLuint object_id,
+                  PFNGLGETSHADERIVPROC object_property_getter_func,
+                  PFNGLGETSHADERINFOLOGPROC get_info_log_func,
+                  GLenum status_type) {
+  GLint status;
+  object_property_getter_func(object_id, status_type, &status);
+  if (status != GL_TRUE) {
+    GLint info_log_length;
+    object_property_getter_func(object_id, GL_INFO_LOG_LENGTH,
+                                &info_log_length);
+    GLchar *buffer = malloc(info_log_length);
+
+    GLsizei buffer_size;
+    get_info_log_func(object_id, info_log_length, &buffer_size, buffer);
+    fprintf(stderr, "Vertex Shader %s\n", buffer);
+
+    free(buffer);
+
+    return false;
+  }
+
+  return true;
+}
+
+bool check_shader_status(GLuint shader_id) {
+  return check_status(shader_id, glGetShaderiv, glGetShaderInfoLog,
+                      GL_COMPILE_STATUS);
+}
+
+bool check_program_status(GLuint program_id) {
+  return check_status(program_id, glGetProgramiv, glGetProgramInfoLog,
+                      GL_LINK_STATUS);
 }
 
 int main() {
@@ -84,7 +120,7 @@ int main() {
   const char *vertex_shader_code = "#version 450\r\n"
                                    ""
                                    "in layout(location=0) vec2 position;"
-                                   "in location(layout=1) vec3 vertex_color;"
+                                   "in layout(location=1) vec3 vertex_color;"
                                    ""
                                    "out vec3 the_color;"
                                    ""
@@ -114,23 +150,19 @@ int main() {
   glCompileShader(vertex_shader_id);
   glCompileShader(fragment_shader_id);
 
-  GLint compile_status;
-  glGetShaderiv(vertex_shader_id, GL_COMPILE_STATUS, &compile_status);
-  if (compile_status != GL_TRUE) {
-    GLint info_log_length;
-    glGetShaderiv(vertex_shader_id, GL_INFO_LOG_LENGTH, &info_log_length);
-    GLchar *buffer = malloc(info_log_length);
-
-    GLsizei buffer_size;
-    glGetShaderInfoLog(vertex_shader_id, info_log_length, &buffer_size, buffer);
-
-    free(buffer);
+  if (!check_shader_status(vertex_shader_id) ||
+      !check_shader_status(fragment_shader_id)) {
+    exit(EXIT_FAILURE);
   }
 
   GLuint program_id = glCreateProgram();
   glAttachShader(program_id, vertex_shader_id);
   glAttachShader(program_id, fragment_shader_id);
   glLinkProgram(program_id);
+
+  if (!check_program_status(program_id)) {
+    exit(EXIT_FAILURE);
+  }
 
   glUseProgram(program_id);
 
