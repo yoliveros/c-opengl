@@ -152,10 +152,10 @@ int main() {
   GLuint fragment_shader_id = glCreateShader(GL_FRAGMENT_SHADER);
 
   const char *adapter[1];
-  adapter[0] = read_file("vertex-shader.glsl");
+  adapter[0] = read_file("src/shaders/vertex-shader.glsl");
   glShaderSource(vertex_shader_id, 1, adapter, 0);
 
-  adapter[0] = read_file("fragment-shader.glsl");
+  adapter[0] = read_file("src/shaders/fragment-shader.glsl");
   glShaderSource(fragment_shader_id, 1, adapter, 0);
 
   glCompileShader(vertex_shader_id);
