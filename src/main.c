@@ -116,16 +116,21 @@ int main() {
 
   glfwSetKeyCallback(window, key_callback);
 
+  const float RED_TRIANGLE_Z = -.5;
+  const float BLUE_TRIANGLE_Z = .5;
+
   GLfloat verts[] = {
-      0.0,  0.0,  1.0, 0.0, 0.0,
+      -1.0, -1.0, RED_TRIANGLE_Z,  1.0, 0.0, 0.0,
 
-      -1.0, 1.0,  0.0, 1.0, 0.0,
+      0.0,  1.0,  RED_TRIANGLE_Z,  1.0, 0.0, 0.0,
 
-      1.0,  1.0,  0.0, 0.0, 1.0,
+      1.0,  -1.0, RED_TRIANGLE_Z,  1.0, 0.0, 0.0,
 
-      -1.0, -1.0, 1.0, 0.0, 0.0,
+      -1.0, 1.0,  BLUE_TRIANGLE_Z, 0.0, 0.0, 1.0,
 
-      1.0,  -1.0, 1.0, 0.0, 0.0,
+      0.0,  0.0,  BLUE_TRIANGLE_Z, 0.0, 0.0, 1.0,
+
+      1.0,  1.0,  BLUE_TRIANGLE_Z, 0.0, 0.0, 1.0,
   };
 
   GLuint vertex_buffer_id;
@@ -133,13 +138,13 @@ int main() {
   glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_id);
   glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
   glEnableVertexAttribArray(0);
-  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 5, 0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, 0);
   glEnableVertexAttribArray(1);
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 5,
-                        (char *)(sizeof(float) * 2));
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6,
+                        (char *)(sizeof(float) * 3));
 
   GLushort indices[] = {
-      0, 1, 2, 0, 3, 4,
+      0, 1, 2, 3, 4, 5,
   };
 
   GLuint index_buffer_id;
@@ -177,8 +182,10 @@ int main() {
 
   glUseProgram(program_id);
 
+  glEnable(GL_DEPTH_TEST);
+
   while (!glfwWindowShouldClose(window)) {
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glViewport(0, 0, WIDTH, HEIGHT);
     // glDrawArrays(GL_TRIANGLES, 0, 6);
