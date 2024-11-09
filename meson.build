@@ -14,12 +14,10 @@ project_dependencies = [
 subdir('src')
 
 inc = include_directories('include')
-#lib = static_library('cglm')
 
 executable(
   'open-tuto',
   project_sources,
   include_directories: inc,
   dependencies: project_dependencies,
-  #link_with: lib,
 )
