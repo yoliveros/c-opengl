@@ -6,7 +6,7 @@
 - Meson
 - Bear
 
-**if on linux try using linux brew to install everyting**
+**If on linux try using linux brew to install everyting**
 
 Once everyting installed: 
 

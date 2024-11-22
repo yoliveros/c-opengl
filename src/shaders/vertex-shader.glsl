@@ -1,4 +1,4 @@
-#version 450
+#version 460
 
 in layout(location = 0) vec3 position;
 in layout(location = 1) vec3 vertex_color;

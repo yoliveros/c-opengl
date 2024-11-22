@@ -1,10 +1,10 @@
-#include "glad/glad.h"
 #include <GLFW/glfw3.h>
-#include <errno.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "utils.h"
 
 const GLuint WIDTH = 800, HEIGHT = 600;
 
@@ -52,38 +52,6 @@ bool check_program_status(GLuint program_id) {
                       GL_LINK_STATUS);
 }
 
-char *read_file(char *file_name) {
-  const size_t buffer_size = 1024;
-
-  errno = 0;
-  FILE *file = fopen(file_name, "r");
-  if (!file) {
-    fprintf(stderr, "Error opening file: %s\n%s\n", file_name, strerror(errno));
-    exit(EXIT_FAILURE);
-  }
-  char *my_file = malloc(buffer_size);
-
-  size_t buffer_read = 0;
-  int c;
-  while ((c = fgetc(file)) != EOF) {
-    if (buffer_read >= buffer_size) {
-      my_file = (char *)realloc(my_file, buffer_read + 10);
-      if (!my_file) {
-        fprintf(stderr, "Memory allocation failed for file: %s\n", file_name);
-        fclose(file);
-        exit(EXIT_FAILURE);
-      }
-    }
-
-    my_file[buffer_read++] = c;
-  }
-
-  my_file[buffer_read] = '\0'; // NULL
-
-  fclose(file);
-  return my_file;
-}
-
 int main() {
   GLFWwindow *window;
 
@@ -93,8 +61,8 @@ int main() {
   }
 
   // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-  // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
-  //  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+  // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
   glfwSetErrorCallback(error_callback);
   window = glfwCreateWindow(WIDTH, HEIGHT, "Hola World", NULL, NULL);
@@ -114,42 +82,15 @@ int main() {
 
   glfwSetKeyCallback(window, key_callback);
 
-  const float RED_TRIANGLE_Z = -.5;
-  const float BLUE_TRIANGLE_Z = .5;
-
-  GLfloat verts[] = {
-      -1.0, -1.0, RED_TRIANGLE_Z,  1.0, 0.0, 0.0,
-
-      0.0,  1.0,  RED_TRIANGLE_Z,  1.0, 0.0, 0.0,
-
-      1.0,  -1.0, RED_TRIANGLE_Z,  1.0, 0.0, 0.0,
-
-      -1.0, 1.0,  BLUE_TRIANGLE_Z, 0.0, 0.0, 1.0,
-
-      0.0,  0.0,  BLUE_TRIANGLE_Z, 0.0, 0.0, 1.0,
-
-      1.0,  1.0,  BLUE_TRIANGLE_Z, 0.0, 0.0, 1.0,
-  };
-
   GLuint vertex_buffer_id;
   glGenBuffers(1, &vertex_buffer_id);
   glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_id);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, 1000, NULL, GL_STATIC_DRAW);
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, 0);
   glEnableVertexAttribArray(1);
   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6,
                         (char *)(sizeof(float) * 3));
-
-  GLushort indices[] = {
-      0, 1, 2, 3, 4, 5,
-  };
-
-  GLuint index_buffer_id;
-  glGenBuffers(1, &index_buffer_id);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_id);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
-               GL_STATIC_DRAW);
 
   GLuint vertex_shader_id = glCreateShader(GL_VERTEX_SHADER);
   GLuint fragment_shader_id = glCreateShader(GL_FRAGMENT_SHADER);
@@ -186,8 +127,8 @@ int main() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glViewport(0, 0, WIDTH, HEIGHT);
-    // glDrawArrays(GL_TRIANGLES, 0, 6);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
 
     glfwSwapBuffers(window);
     glfwPollEvents();

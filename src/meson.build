@@ -1,2 +1,2 @@
 subdir('shaders')
-project_sources += files('main.c', 'glad.c')
+project_sources += files('main.c', 'glad.c', 'utils.c')
