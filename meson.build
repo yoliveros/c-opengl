@@ -12,6 +12,7 @@ project_dependencies = [
 ]
 
 subdir('src')
+subdir('shaders')
 
 inc = include_directories('include')
 

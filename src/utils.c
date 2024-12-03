@@ -15,6 +15,7 @@ char *read_file(char *file_name) {
     fprintf(stderr, "Error opening file: %s\n%s\n", file_name, strerror(errno));
     exit(EXIT_FAILURE);
   }
+
   char *my_file = malloc(buffer_size);
 
   size_t buffer_read = 0;

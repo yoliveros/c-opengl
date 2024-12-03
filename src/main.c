@@ -1,139 +1,149 @@
+#include "glad/glad.h"
+#include "src/utils.h"
+#include <GL/gl.h>
+#include <GL/glext.h>
 #include <GLFW/glfw3.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
-#include "utils.h"
-
-const GLuint WIDTH = 800, HEIGHT = 600;
-
-void key_callback(GLFWwindow *window, int key, int scancode, int action,
-                  int mode) {
-  if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-    glfwSetWindowShouldClose(window, GL_TRUE);
+void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
+  glad_glViewport(0, 0, width, height);
 }
 
-void error_callback(int error, const char *msg) {
-  printf("%d %s\n", error, msg);
+void process_input(GLFWwindow *window) {
+  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+    glfwSetWindowShouldClose(window, true);
+  }
 }
 
-bool check_status(GLuint object_id,
-                  PFNGLGETSHADERIVPROC object_property_getter_func,
-                  PFNGLGETSHADERINFOLOGPROC get_info_log_func,
-                  GLenum status_type) {
-  GLint status;
-  object_property_getter_func(object_id, status_type, &status);
-  if (status != GL_TRUE) {
-    GLint info_log_length;
-    object_property_getter_func(object_id, GL_INFO_LOG_LENGTH,
-                                &info_log_length);
-    GLchar *buffer = malloc(info_log_length);
+typedef enum {
+  VERTEX,
+  FRAGMENT,
+  LINK,
+} SHADER_TYPE;
 
-    GLsizei buffer_size;
-    get_info_log_func(object_id, info_log_length, &buffer_size, buffer);
-    fprintf(stderr, "Vertex Shader %s\n", buffer);
-
-    free(buffer);
-
-    return false;
+void get_gl_error(int shader_id, SHADER_TYPE shader_type) {
+  int success;
+  char info_log[512];
+  if (shader_type == LINK) {
+    glad_glGetProgramiv(shader_id, GL_LINK_STATUS, &success);
+  } else {
+    glad_glGetShaderiv(shader_id, GL_COMPILE_STATUS, &success);
   }
 
-  return true;
-}
-
-bool check_shader_status(GLuint shader_id) {
-  return check_status(shader_id, glGetShaderiv, glGetShaderInfoLog,
-                      GL_COMPILE_STATUS);
-}
-
-bool check_program_status(GLuint program_id) {
-  return check_status(program_id, glGetProgramiv, glGetProgramInfoLog,
-                      GL_LINK_STATUS);
+  if (!success) {
+    if (shader_type == VERTEX) {
+      glad_glGetShaderInfoLog(shader_id, 512, NULL, info_log);
+      fprintf(stderr, "Vertex Shader compilation error: %s\n", info_log);
+    } else if (shader_type == FRAGMENT) {
+      glad_glGetShaderInfoLog(shader_id, 512, NULL, info_log);
+      fprintf(stderr, "Fragment Shader compilation error: %s\n", info_log);
+    } else {
+      glad_glGetProgramInfoLog(shader_id, 512, NULL, info_log);
+      fprintf(stderr, "Shader Program linking error: %s\n", info_log);
+    }
+  }
 }
 
 int main() {
-  GLFWwindow *window;
+  glfwInit();
 
-  if (!glfwInit()) {
-    fprintf(stderr, "Failed to initialize GLFW\n");
-    exit(EXIT_FAILURE);
-  }
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-  // glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-  // glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-  // glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-  glfwSetErrorCallback(error_callback);
-  window = glfwCreateWindow(WIDTH, HEIGHT, "Hola World", NULL, NULL);
-  printf("GLFW: %s\n", glfwGetVersionString());
-  if (!window) {
+  GLFWwindow *window = glfwCreateWindow(800, 600, "Open tuto", NULL, NULL);
+  if (window == NULL) {
     fprintf(stderr, "Failed to create a GLFW window\n");
     glfwTerminate();
-    exit(EXIT_FAILURE);
+    return EXIT_FAILURE;
   }
-
   glfwMakeContextCurrent(window);
+
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-    fprintf(stderr, "Failed to initialize OpenGL context\n");
-    exit(EXIT_FAILURE);
-  }
-  printf("GL: %s\n", glad_glGetString(GL_VERSION));
-
-  glfwSetKeyCallback(window, key_callback);
-
-  GLuint vertex_buffer_id;
-  glGenBuffers(1, &vertex_buffer_id);
-  glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_id);
-  glBufferData(GL_ARRAY_BUFFER, 1000, NULL, GL_STATIC_DRAW);
-  glEnableVertexAttribArray(0);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, 0);
-  glEnableVertexAttribArray(1);
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6,
-                        (char *)(sizeof(float) * 3));
-
-  GLuint vertex_shader_id = glCreateShader(GL_VERTEX_SHADER);
-  GLuint fragment_shader_id = glCreateShader(GL_FRAGMENT_SHADER);
-
-  const char *adapter[1];
-  adapter[0] = read_file("src/shaders/vertex-shader.glsl");
-  glShaderSource(vertex_shader_id, 1, adapter, 0);
-
-  adapter[0] = read_file("src/shaders/fragment-shader.glsl");
-  glShaderSource(fragment_shader_id, 1, adapter, 0);
-
-  glCompileShader(vertex_shader_id);
-  glCompileShader(fragment_shader_id);
-
-  if (!check_shader_status(vertex_shader_id) ||
-      !check_shader_status(fragment_shader_id)) {
-    exit(EXIT_FAILURE);
+    fprintf(stderr, "Failed to initialize GLAD\n");
+    return EXIT_FAILURE;
   }
 
-  GLuint program_id = glCreateProgram();
-  glAttachShader(program_id, vertex_shader_id);
-  glAttachShader(program_id, fragment_shader_id);
-  glLinkProgram(program_id);
+  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-  if (!check_program_status(program_id)) {
-    exit(EXIT_FAILURE);
-  }
+  unsigned int vertex_shader = glad_glCreateShader(GL_VERTEX_SHADER);
+  const char *vertex_shader_source = read_file("shaders/vertex-shader.glsl");
+  glad_glShaderSource(vertex_shader, 1, &vertex_shader_source, NULL);
+  glad_glCompileShader(vertex_shader);
+  get_gl_error(vertex_shader, VERTEX);
 
-  glUseProgram(program_id);
+  unsigned int fragment_shader = glad_glCreateShader(GL_FRAGMENT_SHADER);
+  const char *fragmen_shader_source = read_file("shaders/fragment-shader.glsl");
+  glad_glShaderSource(fragment_shader, 1, &fragmen_shader_source, NULL);
+  glad_glCompileShader(fragment_shader);
+  get_gl_error(fragment_shader, FRAGMENT);
 
-  glEnable(GL_DEPTH_TEST);
+  unsigned int shader_program = glad_glCreateProgram();
+  glad_glAttachShader(shader_program, vertex_shader);
+  glad_glAttachShader(shader_program, fragment_shader);
+  glad_glLinkProgram(shader_program);
+  get_gl_error(shader_program, LINK);
+
+  glad_glDeleteShader(vertex_shader);
+  glad_glDeleteShader(fragment_shader);
+
+  float vertices[] = {
+      0.5f,  0.5f,  0.0f, // top right
+      0.5f,  -0.5f, 0.0f, // bottom right
+      -0.5f, -0.5f, 0.0f, // bottom left
+      -0.5f, 0.5f,  0.0f  // top left
+  };
+
+  unsigned int indices[] = {
+      0, 1, 3, // first triangle
+      1, 2, 3  // second triangle
+  };
+
+  unsigned int VBO, VAO, EBO;
+  glad_glGenVertexArrays(1, &VAO);
+  glad_glGenBuffers(1, &VBO);
+  glad_glGenBuffers(1, &EBO);
+  glad_glBindVertexArray(VAO);
+
+  glad_glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  glad_glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices,
+                    GL_STATIC_DRAW);
+
+  glad_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+  glad_glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
+                    GL_STATIC_DRAW);
+
+  glad_glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), NULL);
+  glad_glEnableVertexAttribArray(0);
+
+  glad_glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glad_glBindVertexArray(0);
+
+  // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
   while (!glfwWindowShouldClose(window)) {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    process_input(window);
 
-    glViewport(0, 0, WIDTH, HEIGHT);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-    // glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
+    glClearColor(0, 1, 0, 1);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    glad_glUseProgram(shader_program);
+    glad_glBindVertexArray(VAO);
+    // glad_glDrawArrays(GL_TRIANGLES, 0, 3);
+    glad_glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
 
+  glad_glDeleteVertexArrays(1, &VAO);
+  glad_glDeleteBuffers(1, &VBO);
+  glad_glDeleteBuffers(1, &EBO);
+  glad_glDeleteProgram(shader_program);
+
   glfwTerminate();
-  exit(EXIT_SUCCESS);
+
+  return EXIT_SUCCESS;
 }
