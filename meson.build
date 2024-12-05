@@ -7,9 +7,14 @@ project(
 
 project_sources = []
 
+cc = meson.get_compiler('c')
+m_dep = cc.find_library('m', required: false)
+
 project_dependencies = [
   dependency('glfw3'),
+  m_dep
 ]
+
 
 subdir('src')
 subdir('shaders')

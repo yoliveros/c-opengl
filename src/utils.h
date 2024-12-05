@@ -1,3 +1,4 @@
 #pragma once
 
-char *read_file(char *file_name);
+/// Caller must `free` memory after use
+char *read_file(const char *file_name);

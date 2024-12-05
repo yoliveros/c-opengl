@@ -6,7 +6,7 @@
 
 #include "utils.h"
 
-char *read_file(char *file_name) {
+char *read_file(const char *file_name) {
   const size_t buffer_size = 1024;
 
   errno = 0;
