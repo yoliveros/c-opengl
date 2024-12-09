@@ -11,7 +11,7 @@ typedef enum {
 
 unsigned int ID;
 
-void get_gl_error(int shader_id, SHADER_TYPE shader_type) {
+static void get_gl_error(int shader_id, SHADER_TYPE shader_type) {
   int success;
   char info_log[512];
   if (shader_type == LINK) {

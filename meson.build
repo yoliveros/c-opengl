@@ -18,6 +18,7 @@ project_dependencies = [
 
 subdir('src')
 subdir('shaders')
+subdir('textures')
 
 inc = include_directories('include')
 
