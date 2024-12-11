@@ -99,6 +99,7 @@ int main() {
   } else {
     fprintf(stderr, "Failed to load textures\n");
   }
+
   stbi_image_free(data);
 
   // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
