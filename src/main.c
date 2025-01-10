@@ -1,8 +1,13 @@
+#include "cglm/affine-pre.h"
+#include "cglm/mat4.h"
+#include "cglm/types.h"
+#include "cglm/vec4.h"
 #include "glad/glad.h"
 #include "src/shader.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
 #include <GLFW/glfw3.h>
+#include <cglm/cglm.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -118,6 +123,13 @@ int main() {
     // float green_value = (sin(time_value) / 2.0) + 0.5;
     // shader_set_float("our_color", 1.0);
     //  glad_glUniform4f(vertex_color_location, 0.0, green_value, 0.0, 1.0);
+
+    vec4 vec = {1.0, 0.0, 0.0, 1.0};
+    mat4 trans = GLM_MAT4_IDENTITY_INIT;
+    vec3 translate = {1.0, 1.0, 0.0};
+    glm_translate(trans, translate);
+    vec4 result;
+    glm_mat4_mulv(trans, vec, result);
 
     shader_use();
     glad_glBindTexture(GL_TEXTURE_2D, texture);
